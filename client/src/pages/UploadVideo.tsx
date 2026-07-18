@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Input } from "../components/Input";
 import Button from "../components/Button";
 
@@ -25,6 +25,8 @@ function UploadVideoPage() {
     ageRating: "",
     video: null,
   });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: any) => {
     setVideo({
@@ -34,10 +36,23 @@ function UploadVideoPage() {
   };
 
   return (
-    <div>
+    <div className="p-6">
+      {error && (
+        <p className="bg-red-900 text-slate-200 mb-2 px-3 py-2 rounded-sm">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="bg-green-900 text-slate-200 mb-2 px-3 py-2 rounded-sm">
+          Video uploaded successfully!
+        </p>
+      )}
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          setError("");
+          setSuccess(false);
+
           const formData = new FormData();
           formData.append("title", video.title);
           formData.append("description", video.description);
@@ -52,13 +67,26 @@ function UploadVideoPage() {
 
           const token = localStorage.getItem("token");
 
+          if (!token) {
+            setError("You must be logged in to upload a video.");
+            return;
+          }
+
           try {
             const res = await axios.post(`${API_URL}/videos`, formData, {
               headers: { Authorization: `Bearer ${token}` },
             });
             console.log(res);
-          } catch (error) {
-            console.error(error);
+            setSuccess(true);
+          } catch (err) {
+            if (err instanceof AxiosError) {
+              setError(
+                err.response?.data?.message ||
+                  "Upload failed. Please try again."
+              );
+            } else {
+              setError("Upload failed. Please try again.");
+            }
           }
         }}
       >
