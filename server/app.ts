@@ -26,4 +26,8 @@ app.use(videoRoutes);
 app.use(authRoutes);
 app.use(commentRoutes);
 
+app.get("/", (req, res) => {
+  res.json({ message: "Virlio API is running", status: "ok" });
+});
+
 export default app;
